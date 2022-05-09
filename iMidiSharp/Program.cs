@@ -43,7 +43,7 @@ namespace Test
             MidiHeaderChunk header = new MidiHeaderChunk(MidiType.One, ushort.MaxValue, new TickDivSpecification((ushort)ppqn), false);
 
             DeltaTime zero = new DeltaTime(DeltaTimeInputMode.VariableLength, 0);
-            DeltaTime currentNoteLength = new DeltaTime(DeltaTimeInputMode.NonVariableLength, ppqn * 4);
+            DeltaTime currentNoteLength = new DeltaTime(DeltaTimeInputMode.NonVariableLength, ppqn * 8);
             DeltaTime one = new DeltaTime(DeltaTimeInputMode.VariableLength, 1);
 
 
@@ -66,35 +66,39 @@ namespace Test
                 tracks[i].AddEvent(new MidiPort(zero, 0));
             }
 
-            tracks[0].AddEvent(new Tempo(zero, TempoInputMode.QuarterNotesPerMinute, 120));
 
+            uint currentTempo = 120;
             int trackIndex = 0;
             DeltaTime currentTime;
+            ulong tick;
+
+            tracks[0].AddEvent(new Tempo(zero, TempoInputMode.QuarterNotesPerMinute, currentTempo));
 
             for (int i = 0; i < 3; i++)
             {
                 Console.WriteLine($"Note count {Math.Pow(2, i)}");
 
-                //currentNoteLength /= 2;
+                currentNoteLength /= 2;
 
-                //for (ulong k = 0; k < Math.Pow(2, i); ++k)
-                //{
-                //    ulong tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+                for (ulong k = 0; k < Math.Pow(2, i); ++k)
+                {
+                    tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
 
-                //    while (tick > 0x0FFFFFFF)
-                //    {
-                //        tracks[trackIndex].AddEvent(new TimeSignature(zero, 4, 2, 0x18));
-                //        tick -= 0x0FFFFFFF;
-                //    }
+                    while (tick > 0x0FFFFFFF)
+                    {
+                        tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                        tick -= 0x0FFFFFFF;
+                    }
 
-                //    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
-                //    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
-                //    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
+                    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+                    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
+                    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
 
-                //    trackIndex++;
-                //    if (trackIndex >= trackMax)
-                //        trackIndex = 0;
-                //}
+                    trackIndex++;
+                    if (trackIndex >= trackMax)
+                        trackIndex = 0;
+                }
+
             }
 
             currentNoteLength.SetDeltaTimeFromVariableLengthTime(0x818000);
@@ -103,88 +107,109 @@ namespace Test
             {
                 Console.WriteLine($"Note count {Math.Pow(2, i + 3)}");
 
-                //currentNoteLength /= 2;
+                for (ulong k = 0; k < Math.Pow(2, i + 3); ++k)
+                {
+                    tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
 
-                //for (ulong k = 0; k < Math.Pow(2, i + 4); ++k)
-                //{
-                //    ulong tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+                    while (tick > 0x0FFFFFFF)
+                    {
+                        tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                        tick -= 0x0FFFFFFF;
+                    }
 
-                //    while (tick > 0x0FFFFFFF)
-                //    {
-                //        tracks[trackIndex].AddEvent(new TimeSignature(zero, 4, 2, 0x18));
-                //        tick -= 0x0FFFFFFF;
-                //    }
+                    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+                    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
+                    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
 
-                //    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
-                //    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
-                //    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
+                    trackIndex++;
+                    if (trackIndex >= trackMax)
+                        trackIndex = 0;
+                }
 
-                //    trackIndex++;
-                //    if (trackIndex >= trackMax)
-                //        trackIndex = 0;
-                //}
+                if (i != 14)
+                    currentNoteLength /= 2;
             }
+
 
             for (int i = 0; i < 18; i++)
             {
                 Console.WriteLine($"Note count {Math.Pow(2, i + 18)}");
 
-                //ulong tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
-                //currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
-                //tracks[trackIndex].AddEvent(new Tempo(currentTime, TempoInputMode.QuarterNotesPerMinute, (uint)(60000000 / Math.Pow(2, 19 - i))));
+                currentTempo *= 2;
+                tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+                while (tick > 0x0FFFFFFF)
+                {
+                    tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                    tick -= 0x0FFFFFFF;
+                }
+                currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+                tracks[trackIndex].AddEvent(new Tempo(currentTime, TempoInputMode.QuarterNotesPerMinute, currentTempo));
 
-                //for (ulong k = 0; k < Math.Pow(2, i + 20); ++k)
-                //{
-                //    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)((trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition));
-                //    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
-                //    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
+                trackIndex++;
+                if (trackIndex >= trackMax)
+                    trackIndex = 0;
 
-                //    while (tick > 0x0FFFFFFF)
-                //    {
-                //        tracks[trackIndex].AddEvent(new TimeSignature(zero, 4, 2, 0x18));
-                //        tick -= 0x0FFFFFFF;
-                //    }
+                for (ulong k = 0; k < Math.Pow(2, i + 18); ++k)
+                {
+                    tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+                    while (tick > 0x0FFFFFFF)
+                    {
+                        tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                        tick -= 0x0FFFFFFF;
+                    }
+                    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+                    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
+                    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
 
-                //    trackIndex++;
-                //    if (trackIndex >= trackMax)
-                //        trackIndex = 0;
-                //}
+                    trackIndex++;
+                    if (trackIndex >= trackMax)
+                        trackIndex = 0;
+                }
             }
 
             Console.WriteLine($"Note count 65536000000");
 
-            //ulong tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
-            //currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
-            //tracks[trackIndex].AddEvent(new Tempo(currentTime, TempoInputMode.QuarterNotesPerMinute, (uint)(60000000 / Math.Pow(2, 19 - i))));
+            tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+            while (tick > 0x0FFFFFFF)
+            {
+                tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                tick -= 0x0FFFFFFF;
+            }
+            currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+            tracks[trackIndex].AddEvent(new Tempo(currentTime, TempoInputMode.QuarterNotesPerMinute, 60000000));
 
-            //for (ulong k = 0; k < Math.Pow(2, i + 20); ++k)
-            //{
-            //    currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)((trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition));
-            //    tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
-            //    tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
+            trackIndex++;
+            if (trackIndex >= trackMax)
+                trackIndex = 0;
 
-            //    while (tick > 0x0FFFFFFF)
-            //    {
-            //        tracks[trackIndex].AddEvent(new TimeSignature(zero, 4, 2, 0x18));
-            //        tick -= 0x0FFFFFFF;
-            //    }
+            for (ulong k = 0; k < 65536000000; ++k)
+            {
+                tick = (trackIndex == 0 ? tracks[trackMax - 1].TrackTickPosition : tracks[trackIndex - 1].TrackTickPosition) - tracks[trackIndex].TrackTickPosition;
+                while (tick > 0x0FFFFFFF)
+                {
+                    tracks[trackIndex].AddEvent(new TimeSignature(new DeltaTime(DeltaTimeInputMode.NonVariableLength, 0x0FFFFFFF), 4, 2, 0x18));
+                    tick -= 0x0FFFFFFF;
+                }
+                currentTime = new DeltaTime(DeltaTimeInputMode.NonVariableLength, (uint)tick);
+                tracks[trackIndex].AddEvent(new NoteOn(currentTime, 1, Notes.C4, 0x50));
+                tracks[trackIndex].AddEvent(new NoteOff(currentNoteLength, 1, Notes.C4, 0x50));
 
-            //    trackIndex++;
-            //    if (trackIndex >= trackMax)
-            //        trackIndex = 0;
-            //}
+                trackIndex++;
+                if (trackIndex >= trackMax)
+                    trackIndex = 0;
+            }
 
-            //foreach (MidiTrackChunk track in tracks)
-            //{
-            //    track.AddEvent(new EndOfTrack(one));
-            //    header.AddTrack(track);
-            //}
+            foreach (MidiTrackChunk track in tracks)
+            {
+                track.AddEvent(new EndOfTrack(one));
+                header.AddTrack(track);
+            }
 
-            //MidiFile myMidi = new MidiFile(@"E:\asdf.mid", header);
+            MidiFile myMidi = new MidiFile(@"E:\asdf.mid", header);
 
-            //myMidi.WriteFile();
-            //Console.WriteLine("Done");
-            //Console.ReadLine();
+            myMidi.WriteFile();
+            Console.WriteLine("Done");
+            Console.ReadLine();
         }
 
         static void Test()
